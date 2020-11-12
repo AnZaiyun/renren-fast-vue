@@ -22,10 +22,20 @@
       <span class="custom-tree-node" slot-scope="{ node, data }">
         <span>{{ node.label }}</span>
         <span>
-          <el-button v-if="node.level <= 2" type="text" size="mini" @click="() => append(data)">
+          <el-button
+            v-if="node.level <= 2"
+            type="text"
+            size="mini"
+            @click="() => append(data)"
+          >
             Append
           </el-button>
-          <el-button v-if="node.childNodes.length==0" type="text" size="mini" @click="() => remove(node, data)">
+          <el-button
+            v-if="node.childNodes.length == 0"
+            type="text"
+            size="mini"
+            @click="() => remove(node, data)"
+          >
             Delete
           </el-button>
         </span>
@@ -41,14 +51,14 @@
 export default {
   components: {},
   props: {},
-  data() {
+  data () {
     return {
       menus: [],
       defaultProps: {
-        children: "children",
-        label: "name",
-      },
-    };
+        children: 'children',
+        label: 'name'
+      }
+    }
   },
   // 计算属性 类似data概念
   computed: {},
@@ -56,37 +66,58 @@ export default {
   watch: {},
   // 方法集合
   methods: {
-    handleNodeClick(data) {
-      console.log(data);
+    handleNodeClick (data) {
+      console.log(data)
     },
-    getMenus() {
+    getMenus () {
       this.$http({
-        url: this.$http.adornUrl("/product/category/list/tree"),
-        method: "get",
+        url: this.$http.adornUrl('/product/category/list/tree'),
+        method: 'get'
       }).then(({ data }) => {
-        console.log("sucess", data.categories);
-        this.menus = data.categories;
-      });
+        console.log('sucess', data.categories)
+        this.menus = data.categories
+      })
     },
-    append(data) {
-      console.log("append",data)
+    append (data) {
+      console.log('append', data)
     },
 
-    remove(node, data) {
-      console.log("remove",node,data)
-    },
+    remove (node, data) {
+      var ids = [data.catId]
+      this.$confirm(`此操作将永久删除菜单【${data.name}】, 是否继续?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          this.$http({
+            url: this.$http.adornUrl('/product/category/delete'),
+            method: 'post',
+            data: this.$http.adornData(ids, false)
+          }).then(({ data }) => {
+            this.$message({
+              message: `菜单已删除`,
+              type: 'success'
+            })
+            this.getMenus()
+          })
+        })
+        .catch(() => {
+          this.$message('删除操作已取消')
+        })
+    }
   },
-  created() {
-    this.getMenus();
+  created () {
+    this.getMenus()
   },
-  mounted() {},
-  beforeCreate() {},
-  beforeMount() {},
-  beforeUpdate() {},
-  updated() {},
-  beforeDestroy() {},
-  destroyed() {},
-  activated() {}
+  mounted () {},
+  beforeCreate () {},
+  beforeMount () {},
+  beforeUpdate () {},
+  updated () {},
+  beforeDestroy () {},
+  destroyed () {},
+  activated () {}
 }
 </script>
 

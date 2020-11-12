@@ -20,6 +20,9 @@ module.exports = {
     // allow async-await
     'generator-star-spacing': 'off',
     // allow debugger during development
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    "no-extra-semi": 2, //禁止多余冒号 
+    "comma-dangle": [2, "never"],  //对象字面量项尾不能有逗号
+    "comma-spacing": 0  // 逗号前后的空格
   }
 }
