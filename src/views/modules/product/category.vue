@@ -1,5 +1,12 @@
 <template>
   <div class="block">
+    <el-switch
+      v-model="isDraggable"
+      active-text="开启拖拽"
+      inactive-text="关闭拖拽"
+    >
+    </el-switch>
+    <el-button type="danger" @click="removeCheckedNodes">批量删除</el-button>
     <el-tree
       :data="menus"
       show-checkbox
@@ -7,9 +14,10 @@
       :default-expanded-keys="expandedIds"
       :props="defaultProps"
       :expand-on-click-node="false"
-      draggable
+      :draggable="isDraggable"
       :allow-drop="allowDrop"
       @node-drop="handleDrop"
+      ref="menuTree"
     >
       <span class="custom-tree-node" slot-scope="{ node, data }">
         <span>{{ node.label }}</span>
@@ -97,6 +105,8 @@ export default {
       fromType: "",
       formLabelWidth: "120px",
       maxLen: 0,
+      isDraggable: true,
+      draggingNodes: [],
     };
   },
   // 计算属性 类似data概念
@@ -266,33 +276,91 @@ export default {
         this.categoty.catId = draggingNode.data.catId;
         if (dropType != "inner") {
           //如果不是拖拽到一个节点里，那么当前节点的父id就是拖拽到节点的父id，层级一致
-          this.categoty.parentCid = dropNode.data.parentCid
-          this.categoty.catLevel = dropNode.data.catLevel
+          draggingNode.data.parentCid = dropNode.data.parentCid;
+          draggingNode.data.catLevel = dropNode.data.catLevel;
+          draggingNode.data.sort = dropNode.data.sort;
+
+          var { catId, parentCid, catLevel ,sort} = draggingNode.data;
+          //先把当前拖拽的节点放入要更新的节点中
+          this.draggingNodes.push({ catId, parentCid, catLevel ,sort});
+          
         } else {
           //如果是拖拽到一个节点里，那么当前节点的父id就是拖拽到节点的id，层级为拖拽到节点的层级+1
-          this.categoty.parentCid = dropNode.data.catId
-          this.category.catLevel = 1 * 1 + 1
+          draggingNode.data.parentCid = dropNode.data.catId;
+          draggingNode.data.catLevel = dropNode.data.catLevel * 1 + 1;
+          //对拖拽到节点下的数据顺序进行重排，其实这个排序也还是不准确，这里只是实现一个排序的大致效果
+          for (var i = 0; i < dropNode.childNodes.length; i++) {
+            dropNode.childNodes[i].data.sort = i;
+
+            var { catId, parentCid, catLevel ,sort} = dropNode.childNodes[i].data;
+            //先把当前拖拽的节点放入要更新的节点中
+            this.draggingNodes.push({ catId, parentCid, catLevel ,sort });
+          }
         }
 
-        var { catId, parentCid ,catLevel} = this.categoty
-        var data = { catId, parentCid ,catLevel}
-        // console.log(catId, parentCid, catLevel)
+        //遍历子节点,更新拖拽节点子节点的层级
+        this.updateDraggingNodes(draggingNode);
+
+        console.log(this.draggingNodes)
 
         //发送请求，将拖拽节点的信息更新入库，需要注意的是，拖拽节点的子节点的层级也要更新，这部分放到后台去更新
         this.$http({
           url: this.$http.adornUrl("/product/category/draggingNodeUpdate"),
           method: "post",
-          data: this.$http.adornData(data, false),
+          data: this.$http.adornData(this.draggingNodes, false),
         }).then(({ data }) => {
           this.$message({
             message: `菜单更新成功`,
             type: "success",
           });
           this.getMenus();
+          //选择展开的节点
+          this.expandedIds = [draggingNode.data.parentCid];
         });
 
-        console.log("handleDrop:", draggingNode, dropNode, dropType)
+        console.log("handleDrop:", draggingNode, dropNode, dropType);
       }
+    },
+    updateDraggingNodes(nodes) {
+      for (var i = 0; i < nodes.childNodes.length; i++) {
+        nodes.childNodes[i].data.catLevel = nodes.data.catLevel * 1 + 1;
+        var { catId, catLevel } = nodes.childNodes[i].data;
+        this.draggingNodes.push({ catId, catLevel });
+        this.updateDraggingNodes(nodes.childNodes[i]);
+      }
+    },
+    removeCheckedNodes() {
+      //获取所有已选择的节点，需要注意的是一级节点不可删除，所以需要对获取到的节点进行删除
+      var CheckedNodes = this.$refs.menuTree.getCheckedNodes();
+      var ids = [];
+      for (var i = 0; i < CheckedNodes.length; i++) {
+        if (CheckedNodes[i].parentCid != 0) {
+          ids.push(CheckedNodes[i].catId);
+        }
+      }
+
+      console.log(ids);
+      this.$confirm(`此操作将永久删除选择菜单, 是否继续?`, "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          this.$http({
+            url: this.$http.adornUrl("/product/category/delete"),
+            method: "post",
+            data: this.$http.adornData(ids, false),
+          }).then(({ data }) => {
+            this.$message({
+              message: `菜单已删除`,
+              type: "success",
+            });
+            this.getMenus();
+          });
+        })
+        .catch(() => {
+          this.$message("删除操作已取消");
+        });
     },
   },
   created() {
