@@ -96,6 +96,7 @@ export default {
       },
       fromType: "",
       formLabelWidth: "120px",
+      maxLen: 0,
     };
   },
   // 计算属性 类似data概念
@@ -116,8 +117,6 @@ export default {
       });
     },
     append(data) {
-      console.log("appned", data);
-
       //给要增加的分类添加初始值
       this.categoty.catId = null;
       this.categoty.name = null;
@@ -235,10 +234,65 @@ export default {
 
     allowDrop(draggingNode, dropNode, type) {
       //被拖动的当前节点以及所在的父节点总层数不能大于3
-      console.log(draggingNode, dropNode, type);
+      this.maxLen = 0;
+      this.calculLen(draggingNode);
+      //计算拖动节点的最大长度：子节点深度-当前节点深度+1=整个树的深度
+      this.maxLen = this.maxLen - draggingNode.data.catLevel + 1;
+      //加上要移动到的节点的当前深度，便是移动后该节点的深度
+      this.maxLen = this.maxLen + dropNode.data.catLevel;
+
+      if (this.maxLen > 3 && type == "inner") {
+        return false;
+      } else {
+        return true;
+      }
+    },
+    calculLen(node) {
+      //如果当前节点的层级大于最大层级，则最大层级为当前层级
+      if (node.data.catLevel > this.maxLen) {
+        this.maxLen = node.data.catLevel;
+      }
+
+      //递归查询子节点层级
+      if (node.childNodes != null && node.childNodes.length != 0) {
+        for (var i = 0; i < node.childNodes.length; i++) {
+          this.calculLen(node.childNodes[i]);
+        }
+      }
     },
     handleDrop(draggingNode, dropNode, dropType, ev) {
-      console.log("handleDrop:", dropNode.label, dropType);
+      // console.log(draggingNode, dropNode.data.catLevel, dropType)
+      if (dropNode != null) {
+        this.categoty.catId = draggingNode.data.catId;
+        if (dropType != "inner") {
+          //如果不是拖拽到一个节点里，那么当前节点的父id就是拖拽到节点的父id，层级一致
+          this.categoty.parentCid = dropNode.data.parentCid
+          this.categoty.catLevel = dropNode.data.catLevel
+        } else {
+          //如果是拖拽到一个节点里，那么当前节点的父id就是拖拽到节点的id，层级为拖拽到节点的层级+1
+          this.categoty.parentCid = dropNode.data.catId
+          this.category.catLevel = 1 * 1 + 1
+        }
+
+        var { catId, parentCid ,catLevel} = this.categoty
+        var data = { catId, parentCid ,catLevel}
+        // console.log(catId, parentCid, catLevel)
+
+        //发送请求，将拖拽节点的信息更新入库，需要注意的是，拖拽节点的子节点的层级也要更新，这部分放到后台去更新
+        this.$http({
+          url: this.$http.adornUrl("/product/category/draggingNodeUpdate"),
+          method: "post",
+          data: this.$http.adornData(data, false),
+        }).then(({ data }) => {
+          this.$message({
+            message: `菜单更新成功`,
+            type: "success",
+          });
+          this.getMenus();
+        });
+
+        console.log("handleDrop:", draggingNode, dropNode, dropType)
+      }
     },
   },
   created() {
