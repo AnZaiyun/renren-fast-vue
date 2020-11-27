@@ -1,6 +1,6 @@
 <template>
-    <el-dialog :title="!dataForm.id ? '新增' : '修改'" :close-on-click-modal="false" :visible.sync="visible">
-        <el-form :model="dataForm" :rules="dataRule" ref="dataForm" @keyup.enter.native="dataFormSubmit()" label-width="120px">
+    <el-dialog :title="!dataForm.brandId ? '新增' : '修改'" :close-on-click-modal="false" :visible.sync="visible">
+        <el-form label-position="left" :model="dataForm" :rules="dataRule" ref="dataForm" @keyup.enter.native="dataFormSubmit()" label-width="120px">
             <el-form-item label="品牌名" prop="name">
                 <el-input v-model="dataForm.name" placeholder="品牌名"></el-input>
             </el-form-item>
@@ -32,7 +32,7 @@
 <script>
 import SingleUpload from '@/components/upload/singleUpload'
 export default {
-    components: {SingleUpload},
+    components: { SingleUpload },
     data() {
         return {
             visible: false,
@@ -59,10 +59,30 @@ export default {
                     { required: true, message: '显示状态[0-不显示；1-显示]不能为空', trigger: 'blur' }
                 ],
                 firstLetter: [
-                    { required: true, message: '检索首字母不能为空', trigger: 'blur' }
+                    {
+                        validator: (rule, value, callback) => {
+                            if (value == "") {
+                                callback(new Error("首字母必须填写"));
+                            } else if (!/^[a-zA-Z]$/.test(value)) {
+                                callback(new Error("首字母必须a-z或者A-Z之间"));
+                            } else {
+                                callback();
+                            }
+                        }, trigger: 'blur'
+                    }
                 ],
                 sort: [
-                    { required: true, message: '排序不能为空', trigger: 'blur' }
+                    {
+                        validator: (rule, value, callback) => {
+                            if (value == "") {
+                                callback(new Error("排序字段必须填写"));
+                            // } else if (!Number.isInteger(value) || value < 0) {
+                            //     callback(new Error("排序必须是一个大于等于0的整数"));
+                            } else {
+                                callback();
+                            }
+                        }, trigger: 'blur'
+                    }
                 ]
             }
         }
