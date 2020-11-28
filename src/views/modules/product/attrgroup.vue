@@ -74,7 +74,8 @@ export default {
             totalPage: 0,
             dataListLoading: false,
             dataListSelections: [],
-            addOrUpdateVisible: false
+            addOrUpdateVisible: false,
+            catId:0
         };
     },
     //计算属性 类似data概念
@@ -86,13 +87,17 @@ export default {
         //子组件的数据传递到父组件
         treeNodeClick(data, node, component){
             console.log('节点被点击-传递到父组件', data,node,component)
+            if(node.level == 3){
+                this.catId = data.catId
+                this.getDataList()
+            }
         },
 
         // 获取数据列表
         getDataList() {
             this.dataListLoading = true
             this.$http({
-                url: this.$http.adornUrl('/product/attrgroup/list'),
+                url: this.$http.adornUrl(`/product/attrgroup/list/${this.catId}`),
                 method: 'get',
                 params: this.$http.adornParams({
                     'page': this.pageIndex,
