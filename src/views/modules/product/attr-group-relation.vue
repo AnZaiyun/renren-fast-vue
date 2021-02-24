@@ -193,6 +193,7 @@ export default {
         method: "get",
         params: this.$http.adornParams({})
       }).then(({ data }) => {
+        console.log("查询到关联数据",data.data)
         this.relationAttrs = data.data;
       });
     },
