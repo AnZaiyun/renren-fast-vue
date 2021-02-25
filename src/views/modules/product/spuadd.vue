@@ -673,15 +673,25 @@ export default {
           method: "get",
           params: this.$http.adornParams({})
         }).then(({ data }) => {
+          console.log("发布商品，获取规格参数",data.data)
           //先对表单的baseAttrs进行初始化
-          data.data.forEach(item => {
-            let attrArray = [];
-            item.attrs.forEach(attr => {
-              attrArray.push({
+          // data.data.forEach(item => {
+          //   let attrArray = [];
+          //   item.attrs.forEach(attr => {
+          //     attrArray.push({
+          //       attrId: attr.attrId,
+          //       attrValues: "",
+          //       showDesc: attr.showDesc
+          //     });
+          //   });
+          //   this.dataResp.baseAttrs.push(attrArray);
+          // });
+          let attrArray = [];
+          data.data.forEach(attr => {          
+            attrArray.push({
                 attrId: attr.attrId,
                 attrValues: "",
                 showDesc: attr.showDesc
-              });
             });
             this.dataResp.baseAttrs.push(attrArray);
           });
