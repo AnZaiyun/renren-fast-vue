@@ -90,7 +90,7 @@
                     placeholder="请选择或输入值"
                   >
                     <el-option
-                      v-for="(val,vidx) in attr.valueSelect.split(';')"
+                      v-for="(val,vidx) in attr.valueSelect.split(',')"
                       :key="vidx"
                       :label="val"
                       :value="val"
@@ -131,7 +131,7 @@
                     <el-checkbox
                       v-if="dataResp.saleAttrs[aidx].valueSelect != ''"
                       :label="val"
-                      v-for="val in dataResp.saleAttrs[aidx].valueSelect.split(';')"
+                      v-for="val in dataResp.saleAttrs[aidx].valueSelect.split(',')"
                       :key="val"
                     ></el-checkbox>
                     <div style="margin-left:20px;display:inline">
@@ -393,10 +393,10 @@ export default {
           { required: true, message: "请选择一个品牌", trigger: "blur" }
         ],
         decript: [
-          { required: true, message: "请上传商品详情图集", trigger: "blur" }
+          { required: false, message: "请上传商品详情图集", trigger: "blur" }
         ],
         images: [
-          { required: true, message: "请上传商品图片集", trigger: "blur" }
+          { required: false, message: "请上传商品图片集", trigger: "blur" }
         ],
         weight: [
           {
@@ -511,7 +511,7 @@ export default {
         if (this.dataResp.saleAttrs[idx].valueSelect == "") {
           this.dataResp.saleAttrs[idx].valueSelect = inputValue;
         } else {
-          this.dataResp.saleAttrs[idx].valueSelect += ";" + inputValue;
+          this.dataResp.saleAttrs[idx].valueSelect += "," + inputValue;
         }
       }
       this.inputVisible[idx].view = false;
@@ -675,23 +675,14 @@ export default {
         }).then(({ data }) => {
           console.log("发布商品，获取规格参数",data.data)
           //先对表单的baseAttrs进行初始化
-          // data.data.forEach(item => {
-          //   let attrArray = [];
-          //   item.attrs.forEach(attr => {
-          //     attrArray.push({
-          //       attrId: attr.attrId,
-          //       attrValues: "",
-          //       showDesc: attr.showDesc
-          //     });
-          //   });
-          //   this.dataResp.baseAttrs.push(attrArray);
-          // });
-          let attrArray = [];
-          data.data.forEach(attr => {          
-            attrArray.push({
+          data.data.forEach(item => {
+            let attrArray = [];
+            item.attrs.forEach(attr => {
+              attrArray.push({
                 attrId: attr.attrId,
                 attrValues: "",
                 showDesc: attr.showDesc
+              });
             });
             this.dataResp.baseAttrs.push(attrArray);
           });
@@ -702,7 +693,7 @@ export default {
     },
 
     submitSkus() {
-      console.log("~~~~~", JSON.stringify(this.spu));
+      console.log("待提交信息", JSON.stringify(this.spu));
       this.$confirm("将要提交商品数据，需要一小段时间，是否继续?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
