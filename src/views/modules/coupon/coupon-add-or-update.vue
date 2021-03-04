@@ -44,6 +44,7 @@
           range-separator="至"
           start-placeholder="开始时间"
           end-placeholder="结束时间"
+          value-format="yyyy-MM-dd HH:mm:ss"
         ></el-date-picker>
       </el-form-item>
       <el-form-item label="使用类型" prop="useType">
@@ -59,13 +60,14 @@
       <el-form-item label="发行数量" prop="publishCount">
         <el-input-number v-model="dataForm.publishCount" :min="0"></el-input-number>
       </el-form-item>
-      <el-form-item label="领取日期" prop="enableStartTime">
+      <el-form-item label="领取日期" prop="dataForm.timeRange[0]">
         <el-date-picker
           v-model="dataForm.timeRange"
           type="daterange"
           range-separator="至"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
+          value-format="yyyy-MM-dd HH:mm:ss"
         ></el-date-picker>
       </el-form-item>
       <el-form-item label="优惠码" prop="code">
